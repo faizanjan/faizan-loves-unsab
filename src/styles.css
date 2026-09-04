@@ -1,0 +1,539 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&display=swap');
+
+/* ── Mobile first. Everything below is written for a phone; the wider
+   breakpoints at the bottom only add to it. ─────────────────────────────── */
+
+:root {
+  --ink: #070610;
+  --green: #8ff2b4;
+  --rose: #ff5f92;
+  --rose-soft: #ff9dc0;
+  --blush: #ffd7e6;
+  --gold: #f0c987;
+  --champagne: #ffe9c2;
+  --mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--ink);
+  color: var(--green);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+main { min-height: 100%; }
+main.dissolving { animation: dissolve 0.9s ease forwards; }
+@keyframes dissolve { to { opacity: 0; filter: blur(14px); transform: scale(1.03); } }
+
+/* ─────────────────────────── act i · terminal ─────────────────────────── */
+
+.terminal {
+  /* --vh is kept in sync with visualViewport so the keyboard never covers
+     the prompt; 100dvh is the fallback. */
+  height: var(--vh, 100dvh);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #0b0f15, #080a0f);
+}
+
+.term-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 12px;
+  padding-top: var(--safe-t);
+  box-sizing: content-box;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.dot.red { background: #ff5f57; }
+.dot.amber { background: #febc2e; }
+.dot.green { background: #28c840; }
+.term-title {
+  margin-left: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6b7a83;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+.term-tools { margin-left: auto; display: flex; gap: 6px; flex: none; }
+.pill {
+  min-width: 42px;
+  min-height: 30px;
+  padding: 0 11px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  color: #7c8b94;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.pill:active, .pill:hover { color: var(--green); border-color: rgba(143, 242, 180, 0.4); }
+
+.term-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 14px calc(18px + var(--safe-b));
+  font-size: 13.5px;
+  line-height: 1.72;
+}
+
+.ln { margin: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sys     { color: var(--rose-soft); letter-spacing: 0.14em; }
+.dim     { color: #5d6b74; }
+.out     { color: #cfe9dc; }
+.ask     { color: #e8fff2; }
+.echo    { color: #9fb4c2; }
+.good    { color: var(--green); }
+.warn    { color: #ffcf7a; }
+.err     { color: #ff89ab; }
+.code    { color: #93cdff; }
+.comment { color: #5f7d92; }
+.bar     { color: #ffd98a; letter-spacing: -0.03em; }
+.hold    { color: #7f8f99; margin-top: 10px; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.4; } }
+/* One line per loop iteration, so the rows land as the loop runs. */
+.heart-row {
+  color: var(--rose);
+  line-height: 1.08;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 18px rgba(255, 70, 130, 0.45);
+  animation: rowIn 0.45s ease both;
+}
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(-3px); filter: blur(3px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 2px;
+  background: var(--green);
+  vertical-align: -0.18em;
+  animation: blink 1.05s steps(2, end) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.term-input { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; }
+.term-input.idle { opacity: 0.28; }
+.ps1 { color: var(--green); flex: none; }
+.term-input input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  color: #ffffff;
+  font: inherit;
+  font-size: max(16px, 1em); /* 16px stops iOS zooming on focus */
+  caret-color: var(--green);
+}
+
+/* ────────────────────────── act ii · the reveal ────────────────────────── */
+
+.reveal {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: radial-gradient(125% 78% at 50% 6%, #431a3c 0%, #241a3d 34%, #0d0a1c 68%, #07060f 100%);
+  animation: revealIn 1.8s ease both;
+}
+/* Opacity only. Animating `filter` to `none` leaves blur(0px) behind under
+   fill-mode:both, and any non-none filter makes this a containing block for
+   position:fixed children — which pinned the backdrop to the page and made it
+   scroll instead of staying put. */
+@keyframes revealIn { from { opacity: 0; } to { opacity: 1; } }
+
+.sky, .sky::before, .sky::after {
+  position: absolute;
+  inset: -20%;
+  z-index: 1;
+  content: '';
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0.9px, transparent 1.4px);
+  background-size: 88px 108px;
+  opacity: 0.20;
+  animation: drift 120s linear infinite;
+}
+.sky::before { background-size: 143px 167px; opacity: 0.13; transform: rotate(19deg); }
+.sky::after  { background-size: 53px 67px;  opacity: 0.09; transform: rotate(-13deg); }
+@keyframes drift { to { transform: translate3d(-60px, -40px, 0); } }
+
+.glow {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: -20vmin;
+  width: 108vmin;
+  height: 76vmin;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255, 60, 140, 0.22), transparent 62%);
+  filter: blur(40px);
+}
+
+.sound {
+  position: fixed;
+  top: calc(10px + var(--safe-t));
+  right: 10px;
+  z-index: 5;
+  min-height: 32px;
+  padding: 0 13px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  color: #c3a6b7;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+}
+
+/* In front of the words, the way confetti is in front of the room. */
+.celebration {
+  position: fixed;
+  inset: 0;
+  /* canvas is a replaced element: inset:0 alone leaves it at its intrinsic
+     attribute size and it overflows the viewport. */
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.stage {
+  position: relative;
+  z-index: 2;
+  width: calc(100% - 32px);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(26px + var(--safe-t)) 0 calc(72px + var(--safe-b));
+  text-align: center;
+}
+
+/* A soft column of shade behind the words only. Darkening the whole page to
+   protect the text would flatten the photo wall; this keeps the margins bright
+   and lifts contrast where it is actually needed, from 4.0:1 to about 6.9:1. */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: -2% -16%;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(6, 4, 14, 0.40) 20%,
+    rgba(6, 4, 14, 0.46) 50%,
+    rgba(6, 4, 14, 0.40) 80%,
+    transparent 100%);
+}
+
+.heart-stage {
+  display: block;
+  width: min(430px, 82vw);
+  height: min(400px, 78vw);
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.heart-canvas { display: block; width: 100%; height: 100%; }
+
+/* The only instruction on the page — it has to be seen. */
+.hint {
+  margin: 4px 0 26px;
+  font-size: 12.5px;
+  letter-spacing: 0.2em;
+  color: #f4c2d7;
+  text-shadow: 0 0 26px rgba(255, 95, 146, 0.6);
+  transition: opacity 0.6s;
+}
+.hint span {
+  display: inline-block;
+  animation: hintPulse 2.3s ease-in-out infinite;
+}
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.55; transform: translateY(0); }
+  50%      { opacity: 1;    transform: translateY(-3px); }
+}
+.hint.gone { opacity: 0; }
+
+/* Localhost only — never rendered on a deployed build. */
+/* Bottom-right, clear of the terminal's own prompt on the left. */
+.devbar {
+  position: fixed;
+  right: 10px;
+  bottom: calc(10px + var(--safe-b));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.devbar-tag {
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #0b0d12;
+  background: #ffd98a;
+  border-radius: 999px;
+  padding: 3px 7px;
+}
+.devbar button {
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #ffe4a8;
+  background: rgba(20, 14, 6, 0.85);
+  border: 1px dashed rgba(255, 217, 138, 0.55);
+  border-radius: 999px;
+  padding: 9px 14px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.devbar button:hover { color: #0b0d12; background: #ffd98a; border-style: solid; }
+
+h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(34px, 10vw, 68px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: #fff3f8;
+}
+h1 span {
+  font-style: italic;
+  color: var(--rose-soft);
+  text-shadow: 0 0 44px rgba(255, 95, 146, 0.4), 0 2px 20px rgba(5, 3, 14, 0.9);
+}
+
+/* Lets the wallpaper stay bright while the words stay readable on top of it. */
+h1, .letter, .names, .hint, .year-dates, .year-label, .year-vow, .year-clock {
+  text-shadow: 0 1px 3px rgba(5, 3, 14, 0.75), 0 2px 22px rgba(5, 3, 14, 0.85);
+}
+
+.names {
+  margin: 14px 0 36px;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: #c69bb2;
+}
+
+.letter {
+  font-family: var(--serif);
+  font-size: clamp(16.5px, 4.4vw, 21px);
+  line-height: 1.72;
+  color: #ecdae3;
+  max-width: 44ch;
+  margin: 0 auto;
+  text-wrap: pretty;
+}
+.letter p { margin: 0 0 20px; }
+.closer { margin-top: 34px !important; font-size: 1.1em; color: #fff2f7; }
+.closer em { font-style: italic; color: var(--rose-soft); }
+
+/* ── photo backdrop ─────────────────────────────────────────────────────── */
+
+/* A mosaic of every photo, blurred to texture and sunk under the gradient.
+   Fixed, so it holds still while the letter scrolls over it. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  /* cover, not stretch — faces distort badly when a 2:3 bitmap is pulled to a
+     phone's 9:19.5 viewport */
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+.backdrop.ready { opacity: 1; }
+
+/* The gradient he liked, now over the photos rather than under them. The first
+   layer is a deliberate pool of darkness behind the heart: without it the
+   mosaic lifts the field the particles sit on, the silhouette stops reading,
+   and it turns into a glowing rectangle. */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    /* Strong where the heart is, light enough elsewhere that the photos read.
+       Measured: this keeps text contrast at ~5:1 even over the brightest
+       snow shots, comfortably past the 4.5:1 AA threshold. */
+    /* The heart is the hero and it is made of light — it needs real darkness
+       behind it or the mosaic swallows it. */
+    radial-gradient(58% 40% at 50% 21%, rgba(5, 3, 12, 0.93), transparent 72%),
+    radial-gradient(125% 78% at 50% 6%,
+      rgba(67, 26, 60, 0.36) 0%,
+      rgba(36, 26, 61, 0.42) 34%,
+      rgba(13, 10, 28, 0.52) 68%,
+      rgba(7, 6, 15, 0.60) 100%);
+}
+
+/* ── the year, as a measured span ────────────────────────────────────────── */
+
+.year {
+  margin: 30px auto 48px;
+  max-width: 330px;
+}
+.year-dates {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: #cba7bd;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 10px;
+}
+.year-rule { position: relative; height: 12px; }
+.year-line, .year-fill {
+  position: absolute;
+  top: 5px;
+  height: 1px;
+}
+.year-line { left: 0; right: 0; background: rgba(240, 201, 135, 0.24); }
+.year-fill {
+  left: 0;
+  background: linear-gradient(90deg, rgba(240, 201, 135, 0.35), var(--gold));
+  box-shadow: 0 0 14px rgba(240, 201, 135, 0.8);
+  transition: width 1s linear;
+}
+.year-tick {
+  position: absolute;
+  top: 3px;
+  width: 1px;
+  height: 5px;
+  margin-left: -0.5px;
+  background: rgba(240, 201, 135, 0.28);
+}
+.year-tick.end { top: 0; height: 11px; background: rgba(240, 201, 135, 0.75); }
+.year-now {
+  position: absolute;
+  top: 1.5px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 16px rgba(240, 201, 135, 1);
+  transition: left 1s linear;
+}
+.year-now.done { animation: yearPulse 2.6s ease-in-out infinite; }
+@keyframes yearPulse {
+  50% { box-shadow: 0 0 26px rgba(240, 201, 135, 1); transform: scale(1.3); }
+}
+.year-label {
+  margin: 16px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: #e7c3d5;
+}
+/* On the day, this is the headline of the whole page. */
+.year-label.done {
+  font-style: normal;
+  font-size: clamp(30px, 9vw, 46px);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--champagne);
+  background: linear-gradient(180deg, #fff6e4 0%, var(--gold) 55%, #d8a45f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 18px rgba(240, 201, 135, 0.45));
+  margin-top: 20px;
+}
+.year-vow {
+  margin: 10px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15.5px;
+  color: #e7c3d5;
+}
+.year-clock {
+  margin: 7px 0 0;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: #a98da0;
+  font-variant-numeric: tabular-nums;
+}
+
+.fade { opacity: 0; animation: fadeUp 1.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); filter: blur(6px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
+/* ───────────────── larger screens · additive only ───────────────── */
+
+@media (min-width: 700px) {
+  .terminal {
+    width: min(860px, calc(100% - 32px));
+    height: min(680px, calc(100dvh - 10vh));
+    margin: 5vh auto;
+    border: 1px solid rgba(150, 255, 190, 0.10);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow:
+      0 40px 120px -30px rgba(0, 0, 0, 0.9),
+      0 0 90px -50px rgba(90, 255, 150, 0.35) inset;
+  }
+  .term-bar { height: 42px; padding: 0 14px; }
+  .term-title { margin-left: 10px; font-size: 11.5px; }
+  .term-body {
+    padding: 22px 24px 26px;
+    font-size: 14.5px;
+    line-height: 1.75;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(143, 242, 180, 0.18) transparent;
+  }
+  .term-body::-webkit-scrollbar { width: 8px; }
+  .term-body::-webkit-scrollbar-thumb { background: rgba(143, 242, 180, 0.16); border-radius: 8px; }
+  .term-input input { font-size: inherit; }
+
+  .stage { max-width: 720px; padding-top: 5vh; }
+  .year-dates, .year-clock { font-size: 11px; }
+  .year { max-width: 380px; }
+  .hint { font-size: 13.5px; }
+  .sound { top: 16px; right: 16px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .fade, .caret, .hold { opacity: 1; }
+}

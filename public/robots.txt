@@ -1,0 +1,5 @@
+# Link-preview crawlers must be able to fetch the page for WhatsApp/iMessage
+# cards to render. Staying out of search is handled by the noindex meta tag,
+# which a blanket Disallow would prevent crawlers from ever reading.
+User-agent: *
+Allow: /
